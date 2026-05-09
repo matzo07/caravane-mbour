@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Liste des Inscrits · Caravane Universitaire</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --gold:       #e8b931;
+      --gold-light: #f5d06a;
+      --deep-blue:  #0d1f4a;
+      --white:      #f9f5ec;
+      --glass-bg:   rgba(10, 15, 40, 0.72);
+      --glass-border: rgba(232, 185, 49, 0.28);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Lato', sans-serif;
+      color: var(--white);
+      min-height: 100vh;
+      overflow-x: hidden;
+      background: linear-gradient(135deg, #0a1428 0%, #1a2a5a 50%, #0f1f3d 100%);
+      background-attachment: fixed;
+      position: relative;
+    }
+
+    /* Beau fond élégant */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 50% 30%, rgba(232,185,49,0.08) 0%, transparent 60%),
+                  url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&auto=format&fit=crop&q=80') center/cover no-repeat;
+      opacity: 0.25;
+      z-index: 0;
+      filter: brightness(0.85) contrast(1.1);
+      pointer-events: none;
+    }
+
+    .bg-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      background: linear-gradient(160deg, rgba(13,31,74,0.88), rgba(5,5,20,0.94));
+    }
+
+    /* ── LAYOUT ───────────────────────────────────────── */
+    .page {
+      position: relative;
+      z-index: 2;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 20px 60px;
+    }
+
+    /* ── HEADER ───────────────────────────────────────── */
+    .header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      margin-bottom: 36px;
+      animation: fadeUp .7s ease both;
+    }
+    .logo-sm {
+      width: 72px;
+      height: 72px;
+      object-fit: contain;
+      border-radius: 50%;
+      border: 2px solid var(--gold);
+      box-shadow: 0 0 20px rgba(232,185,49,0.4);
+      margin-bottom: 14px;
+    }
+    h1 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1.5rem, 4vw, 2.4rem);
+      font-weight: 800;
+      color: var(--gold);
+    }
+    .sub {
+      font-size: .9rem;
+      color: rgba(249,245,236,0.6);
+      letter-spacing: 2px;
+      margin-top: 4px;
+    }
+
+    /* Le reste du CSS reste identique */
+    .total-banner {
+      display: flex; gap: 14px; flex-wrap: wrap;
+      justify-content: center; margin-bottom: 32px;
+      animation: fadeUp .7s .1s ease both;
+    }
+    .stat-chip {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(12px);
+      border-radius: 99px;
+      padding: 8px 22px;
+      font-size: .85rem;
+    }
+    .stat-chip strong {
+      font-family: 'Cinzel', serif;
+      color: var(--gold);
+      font-size: 1.05rem;
+    }
+
+    .bus-section { margin-bottom: 36px; animation: fadeUp .7s ease both; }
+
+    .bus-header {
+      display: flex; align-items: center; gap: 16px;
+      margin-bottom: 16px;
+    }
+    .bus-icon {
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, var(--gold), #c8920f);
+      border-radius: 14px;
+      display: flex;
+      align-items: center; justify-content: center;
+      font-size: 1.5rem;
+      box-shadow: 0 6px 18px rgba(232,185,49,0.35);
+      flex-shrink: 0;
+      transition: transform .3s;
+    }
+    .bus-icon:hover { transform: scale(1.1) rotate(-4deg); }
+
+    .bus-title-wrap h2 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.3rem; font-weight: 700; color: var(--white);
+    }
+    .bus-subtitle {
+      font-size: .78rem;
+      color: rgba(249,245,236,0.55);
+      margin-top: 3px;
+    }
+
+    .bus-progress {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 14px;
+    }
+    .prog-bar-bg {
+      flex: 1; height: 5px; border-radius: 99px;
+      background: rgba(255,255,255,0.1); overflow: hidden;
+    }
+    .prog-bar-fill {
+      height: 100%; border-radius: 99px;
+      background: linear-gradient(90deg, var(--gold), #f0c040);
+      transition: width .8s cubic-bezier(.4,0,.2,1);
+    }
+    .prog-text {
+      font-size: .78rem;
+      color: rgba(249,245,236,0.55);
+      min-width: 60px; text-align: right;
+    }
+
+    .passengers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px;
+    }
+
+    .passenger-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex; align-items: center; gap: 12px;
+      transition: background .2s, border-color .2s, transform .2s;
+      animation: popIn .4s ease both;
+    }
+    .passenger-card:hover {
+      background: rgba(232,185,49,0.08);
+      border-color: rgba(232,185,49,0.3);
+      transform: translateY(-2px);
+    }
+    @keyframes popIn {
+      from { transform: scale(.95) translateY(6px); opacity: 0; }
+      to   { transform: scale(1) translateY(0);     opacity: 1; }
+    }
+
+    .seat-num {
+      width: 32px; height: 32px; flex-shrink: 0;
+      background: rgba(232,185,49,0.15);
+      border: 1px solid rgba(232,185,49,0.3);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Cinzel', serif;
+      font-size: .82rem; font-weight: 700;
+      color: var(--gold);
+    }
+
+    .pax-name {
+      font-weight: 700; font-size: .9rem;
+      white-space: nowrap; overflow: hidden;
+      text-overflow: ellipsis; max-width: 130px;
+    }
+    .pax-phone {
+      font-size: .75rem;
+      color: rgba(249,245,236,0.5);
+      margin-top: 1px;
+    }
+
+    .badge-full {
+      display: inline-block;
+      background: rgba(192,57,43,0.2);
+      border: 1px solid rgba(192,57,43,0.4);
+      color: #ff8a7a; font-size: .73rem;
+      border-radius: 99px; padding: 3px 10px;
+      margin-left: 8px; vertical-align: middle;
+    }
+    .badge-open {
+      display: inline-block;
+      background: rgba(39,174,96,0.2);
+      border: 1px solid rgba(39,174,96,0.4);
+      color: #6dde9a; font-size: .73rem;
+      border-radius: 99px; padding: 3px 10px;
+      margin-left: 8px; vertical-align: middle;
+    }
+
+    .empty-state {
+      text-align: center; padding: 60px 20px;
+      color: rgba(249,245,236,0.5);
+    }
+    .empty-state .big { font-size: 3rem; margin-bottom: 14px; }
+    .empty-state p { font-size: .95rem; line-height: 1.7; }
+
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: var(--white);
+      font-family: 'Lato', sans-serif;
+      font-size: .88rem; padding: 10px 18px;
+      border-radius: 10px; text-decoration: none;
+      transition: background .2s; margin-bottom: 28px;
+      animation: fadeUp .7s ease both;
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.14); }
+
+    .refresh-btn {
+      background: rgba(232,185,49,0.12);
+      border: 1px solid rgba(232,185,49,0.3);
+      color: var(--gold);
+      font-family: 'Lato', sans-serif;
+      font-size: .85rem; padding: 8px 16px;
+      border-radius: 8px; cursor: pointer;
+      transition: background .2s;
+    }
+    .refresh-btn:hover { background: rgba(232,185,49,0.22); }
+
+    @keyframes fadeUp {
+      from { transform: translateY(16px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+
+    .spinner {
+      width: 36px; height: 36px; margin: 60px auto;
+      border: 4px solid rgba(232,185,49,0.2);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 540px) {
+      .passengers-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 360px) {
+      .passengers-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-overlay"></div>
+
+  <main class="page">
+
+    <div class="header">
+      <img class="logo-sm" src="images/logo_amicale.png" alt="Logo" onerror="this.style.display='none'" />
+      <h1>Liste des Inscrits</h1>
+      <p class="sub">Caravane Universitaire · UAM → Mbour</p>
+    </div>
+
+    <a href="index.html" class="back-btn">← Retour à l'accueil</a>
+
+    <!-- Stats -->
+    <div class="total-banner" id="totalBanner" style="display:none">
+      <div class="stat-chip">Total inscrits : <strong id="totalCount">0</strong></div>
+      <div class="stat-chip">Nombre de bus : <strong id="busCount">0</strong></div>
+      <button class="refresh-btn" onclick="loadList()">🔄 Actualiser</button>
+    </div>
+
+    <!-- Loading -->
+    <div id="loadingDiv" style="text-align:center">
+      <div class="spinner"></div>
+    </div>
+
+    <!-- Content -->
+    <div id="contentDiv"></div>
+
+  </main>
+
+  <script>
+    async function loadList() {
+      document.getElementById('loadingDiv').style.display = 'block';
+      document.getElementById('contentDiv').innerHTML = '';
+
+      try {
+        const res  = await fetch('/api/reservations');
+        const data = await res.json();
+
+        document.getElementById('loadingDiv').style.display = 'none';
+
+        if (data.error) {
+          document.getElementById('contentDiv').innerHTML =
+            `<div style="text-align:center;color:#ff8a7a;padding:40px">${data.error}</div>`;
+          return;
+        }
+
+        const { buses, total, max_per_bus } = data;
+
+        if (!buses || buses.length === 0) {
+          document.getElementById('contentDiv').innerHTML = `
+            <div class="empty-state">
+              <div class="big">🚌</div>
+              <p>Aucune inscription confirmée pour le moment.<br/>Soyez le premier à réserver votre place !</p>
+            </div>`;
+          return;
+        }
+
+        // Show stats
+        const banner = document.getElementById('totalBanner');
+        banner.style.display = 'flex';
+        document.getElementById('totalCount').textContent = total;
+        document.getElementById('busCount').textContent   = buses.length;
+
+        // Render buses
+        const html = buses.map((bus, idx) => {
+          const isFull = bus.count >= max_per_bus;
+          const pct    = Math.min(100, Math.round((bus.count / max_per_bus) * 100));
+          const delay  = idx * 0.12;
+
+          const passengers = bus.passengers.map((p, i) => `
+            <div class="passenger-card" style="animation-delay:${i * 0.04}s">
+              <div class="seat-num">${p.seat}</div>
+              <div class="pax-info">
+                <div class="pax-name" title="${p.name}">${p.name}</div>
+                <div class="pax-phone">${p.phone || ''}</div>
+              </div>
+            </div>`).join('');
+
+          return `
+            <div class="bus-section" style="animation-delay:${delay}s">
+              <div class="bus-header">
+                <div class="bus-icon">🚌</div>
+                <div class="bus-title-wrap">
+                  <h2>
+                    Bus ${bus.bus}
+                    ${isFull
+                      ? '<span class="badge-full">Complet</span>'
+                      : '<span class="badge-open">Ouvert</span>'}
+                  </h2>
+                  <div class="bus-subtitle">${bus.count} / ${max_per_bus} passagers</div>
+                </div>
+              </div>
+              <div class="bus-progress">
+                <div class="prog-bar-bg">
+                  <div class="prog-bar-fill" style="width:${pct}%"></div>
+                </div>
+                <div class="prog-text">${pct}%</div>
+              </div>
+              <div class="passengers-grid">${passengers}</div>
+            </div>`;
+        }).join('');
+
+        document.getElementById('contentDiv').innerHTML = html;
+
+      } catch(e) {
+        document.getElementById('loadingDiv').style.display = 'none';
+        document.getElementById('contentDiv').innerHTML =
+          `<div style="text-align:center;color:#ff8a7a;padding:40px">
+            Erreur de connexion. <button class="refresh-btn" onclick="loadList()">Réessayer</button>
+          </div>`;
+      }
+    }
+
+    loadList();
+    setInterval(loadList, 30000);
+  </script>
+</body>
+</html>
